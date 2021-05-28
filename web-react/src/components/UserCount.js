@@ -4,6 +4,13 @@ import { makeStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import Title from './Title'
 import { useQuery, gql } from '@apollo/client'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from '@material-ui/core'
 
 const useStyles = makeStyles({
   depositContext: {
@@ -14,29 +21,73 @@ const useStyles = makeStyles({
   },
 })
 
-const GET_COUNT_QUERY = gql`
+const GET_DATA_QUERY = gql`
   {
-    userCount
+    count {
+      substance {
+        substancename
+        CAS
+      }
+      product {
+        gtin
+        name
+      }
+      rel_list {
+        identity
+        start
+        end
+        from
+        to
+        processing_type
+        amount
+        unit
+        type
+        __typename
+      }
+    }
   }
 `
 
 export default function Deposits() {
   const classes = useStyles()
 
-  const { loading, error, data } = useQuery(GET_COUNT_QUERY)
+  const { loading, error, data } = useQuery(GET_DATA_QUERY)
   if (error) return <p>Error</p>
   return (
     <React.Fragment>
-      <Title>Total Users</Title>
+      <Title>Consist Aluminium</Title>
       <Typography component="p" variant="h4">
-        {loading ? 'Loading...' : data.userCount}
+        {data && !error && !loading && (
+          <div width="100%">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>substance</TableCell>
+                  <TableCell>relation list</TableCell>
+                  <TableCell>product</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.count.map(({ product, rel_list, substance }, index) => {
+                  return (
+                    <TableRow key={`row-${index}`}>
+                      <TableCell>{JSON.stringify(substance)}</TableCell>
+                      <TableCell>{JSON.stringify(rel_list)}</TableCell>
+                      <TableCell>{JSON.stringify(product)}</TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </Typography>
       <Typography color="textSecondary" className={classes.depositContext}>
-        users found
+        consist aluminium
       </Typography>
       <div>
         <Link to="/users" className={classes.navLink}>
-          View users
+          View substances
         </Link>
       </div>
     </React.Fragment>

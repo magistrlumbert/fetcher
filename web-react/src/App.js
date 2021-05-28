@@ -199,7 +199,7 @@ export default function App() {
                 <ListItemIcon>
                   <DashboardIcon />
                 </ListItemIcon>
-                <ListItemText primary="Dashboard" />
+                <ListItemText primary="Aluminium" />
               </ListItem>
             </Link>
 
@@ -208,7 +208,7 @@ export default function App() {
                 <ListItemIcon>
                   <PeopleIcon />
                 </ListItemIcon>
-                <ListItemText primary="Users" />
+                <ListItemText primary="Coming Soon" />
               </ListItem>
             </Link>
           </List>

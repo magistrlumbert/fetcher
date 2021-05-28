@@ -52,38 +52,47 @@ type RatingCount @exclude {
   count: Int!
 }
 
+type product {
+  gtin: ID!
+  name: String
+}
+
+type substance {
+  CAS: ID!
+  substancename: String!
+  density: Int
+}
+
+type mnfplant {
+  reviewId: ID!
+  name: String
+  Country: String
+  Adress: String
+}
+
+type connection{
+  identity: String
+  start: String
+  end: String
+  type: String
+  processing_type: String
+  amount: String
+  unit: String
+  from: String
+  to: String
+}
+
+type response {
+  id:ID!
+  substance: substance
+  rel_list: [connection]
+  product: product
+}
+
 type Mutation {
   mergeBusinessCategory(categories: [String!]!, businessId: ID!): Business
     @cypher(
       statement: "MATCH (b:Business {businessId: $businessId}) UNWIND $categories AS cat MERGE (c:Category {name: cat}) MERGE (b)-[:IN_CATEGORY]->(c) RETURN b"
-    )
-  mergeUser(name: String!, userId: ID!): User
-    @cypher(
-      statement: """
-      MERGE (u:User {userId: $userId})
-      ON CREATE SET u.name = $name
-      RETURN u
-      """
-    )
-  mergeBusiness(
-    businessId: ID!
-    name: String!
-    address: String!
-    city: String!
-    state: String!
-    latitude: Float!
-    longitude: Float!
-  ): Business
-    @cypher(
-      statement: """
-      MERGE (b:Business {businessId: $businessId})
-      ON CREATE SET b.name = $name,
-                    b.address = $address,
-                    b.city = $city,
-                    b.state = $state,
-                    b.location = Point({latitude: $latitude, longitude: $longitude})
-      RETURN b
-      """
     )
 }
 
@@ -93,4 +102,5 @@ type Query {
     @cypher(
       statement: "MATCH (r:Review) WITH r.stars AS stars, COUNT(*) AS count ORDER BY stars RETURN {stars: stars, count: count}"
     )
+  count(offset: Int=0, first: Int=10):[response]
 }
