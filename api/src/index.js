@@ -31,7 +31,7 @@ const driver = neo4j.driver(
  * https://neo4j.com/docs/graphql-manual/current/
  */
 
-const neoSchema = new Neo4jGraphQL({ typeDefs, driver, resolvers })
+const neoSchema = new Neo4jGraphQL({ typeDefs, resolvers, driver })
 
 /*
  * Create a new ApolloServer instance, serving the GraphQL schema
@@ -52,7 +52,7 @@ const server = new ApolloServer({
 // Specify host, port and path for GraphQL endpoint
 const port = process.env.GRAPHQL_SERVER_PORT || 4001
 const path = process.env.GRAPHQL_SERVER_PATH || '/graphql'
-const host = process.env.GRAPHQL_SERVER_HOST || '127.0.0.1'
+const host = process.env.GRAPHQL_SERVER_HOST || '0.0.0.0'
 
 /*
  * Optionally, apply Express middleware for authentication, etc
