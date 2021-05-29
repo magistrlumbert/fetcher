@@ -71,9 +71,27 @@ export default function Deposits() {
                 {data.count.map(({ product, rel_list, substance }, index) => {
                   return (
                     <TableRow key={`row-${index}`}>
-                      <TableCell>{JSON.stringify(substance)}</TableCell>
-                      <TableCell>{JSON.stringify(rel_list)}</TableCell>
-                      <TableCell>{JSON.stringify(product)}</TableCell>
+                      <TableCell>{`${substance.substancename} with CAS:"${substance.CAS}"`}</TableCell>
+                      <TableCell>
+                        {rel_list.map(
+                          ({
+                            // identity,
+                            // start,
+                            // end,
+                            // from,
+                            // to,
+                            // processing_type,
+                            amount,
+                            unit,
+                            type,
+                          }) => {
+                            return `${amount} ${
+                              unit !== 'undefined' ? unit + `s` : 'piece(s)'
+                            } ${type} the product `
+                          }
+                        )}
+                      </TableCell>
+                      <TableCell>{`${product.name} with gtin: "${product.gtin}"`}</TableCell>
                     </TableRow>
                   )
                 })}
