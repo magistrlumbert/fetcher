@@ -79,7 +79,8 @@ type connection{
   amount: String
   unit: String
   from: String
-  to: String
+  to_gtin: String
+  to_name: String
 }
 
 type response {

@@ -37,7 +37,7 @@ const GET_DATA_QUERY = gql`
         start
         end
         from
-        to
+        to_name
         processing_type
         amount
         unit
@@ -52,6 +52,7 @@ export default function Deposits() {
   const classes = useStyles()
 
   const { loading, error, data } = useQuery(GET_DATA_QUERY)
+
   if (error) return <p>Error</p>
   return (
     <React.Fragment>
@@ -69,6 +70,7 @@ export default function Deposits() {
               </TableHead>
               <TableBody>
                 {data.count.map(({ product, rel_list, substance }, index) => {
+                  console.log(product, rel_list)
                   return (
                     <TableRow key={`row-${index}`}>
                       <TableCell>{`${substance.substancename} with CAS:"${substance.CAS}"`}</TableCell>
@@ -79,7 +81,8 @@ export default function Deposits() {
                             // start,
                             // end,
                             // from,
-                            // to,
+                            // to_gtin,
+                            to_name,
                             // processing_type,
                             amount,
                             unit,
@@ -87,7 +90,7 @@ export default function Deposits() {
                           }) => {
                             return `${amount} ${
                               unit !== 'undefined' ? unit + `s` : 'piece(s)'
-                            } ${type} the product `
+                            } ${type} the ${to_name} `
                           }
                         )}
                       </TableCell>

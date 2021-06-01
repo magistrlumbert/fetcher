@@ -4,15 +4,17 @@ const resolvers = {
       let session = ctx.driver.session()
       const cypherQuery = `MATCH path=(substance:substance{substancename:'aluminium'})-[*]->(product:product)
             RETURN substance,relationships(path) as rel_list,product
+            ORDER BY size(rel_list)
             SKIP 0
             LIMIT 50`
-      console.log(cypherQuery)
-
       return await session.run(cypherQuery).then((result) => {
+        let productArr = {}
         const resData = result.records.map((record) => {
           const substance = record.get('substance').properties
+          const product_id = record.get('product').identity.toString()
           const product = record.get('product').properties
           const rel_list = record.get('rel_list')
+          productArr = { ...productArr, [product_id]: product }
           if (substance === null) {
             return {
               substance: { substancename: 'substance' },
@@ -22,15 +24,6 @@ const resolvers = {
             rel_list.map((relationship) => {
               const { identity, start, end, type } = relationship
               const { amount, unit, processing_type } = relationship.properties
-              console.log(
-                identity,
-                start,
-                end,
-                type,
-                amount,
-                unit,
-                processing_type
-              )
               const connection = {
                 id: '0',
                 identity: identity.toString(),
@@ -43,7 +36,8 @@ const resolvers = {
                   ? processing_type.toString()
                   : 'undefined',
                 from: 'product',
-                to: 'product',
+                to_gtin: productArr[end.toString()].gtin,
+                to_name: productArr[end.toString()].name,
               }
               connections = [...connections, connection]
             })
@@ -63,7 +57,6 @@ const resolvers = {
             }
           }
         })
-        console.log(resData)
         return resData
       })
     },
