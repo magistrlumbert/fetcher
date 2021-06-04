@@ -25,17 +25,15 @@ const resolvers = {
               const { identity, start, end, type } = relationship
               const { amount, unit, processing_type } = relationship.properties
               const connection = {
-                id: '0',
                 identity: identity.toString(),
-                start: start.toString(),
-                end: end.toString(),
+                source: start.toString(),
+                target: end.toString(),
                 type: type.toString(),
                 amount: amount.toString(),
                 unit: unit ? unit.toString() : 'undefined',
                 processing_type: processing_type
                   ? processing_type.toString()
                   : 'undefined',
-                from: 'product',
                 to_gtin: productArr[end.toString()].gtin,
                 to_name: productArr[end.toString()].name,
               }
@@ -45,12 +43,14 @@ const resolvers = {
             return {
               id: '0',
               substance: {
-                substancename: substancename,
+                id: record.get('substance').identity.toString(),
+                name: substancename,
                 CAS: CAS,
                 density: density.toString(),
               },
               rel_list: connections,
               product: {
+                id: product_id,
                 gtin: product.gtin,
                 name: product.name,
               },

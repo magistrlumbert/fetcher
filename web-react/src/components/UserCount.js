@@ -11,6 +11,7 @@ import {
   TableHead,
   TableRow,
 } from '@material-ui/core'
+import ForceGraph3D from 'react-force-graph-3d'
 
 const useStyles = makeStyles({
   depositContext: {
@@ -25,18 +26,20 @@ const GET_DATA_QUERY = gql`
   {
     count {
       substance {
-        substancename
+        id
+        name
         CAS
+        density
       }
       product {
+        id
         gtin
         name
       }
       rel_list {
         identity
-        start
-        end
-        from
+        source
+        target
         to_name
         processing_type
         amount
@@ -53,11 +56,42 @@ export default function Deposits() {
 
   const { loading, error, data } = useQuery(GET_DATA_QUERY)
 
+  let product = false
+  let rel_list = false
+  let substance = false
+  let nodes = false
+
+  if (data && data.count) {
+    product = data.count.map(({ product }) => {
+      return product
+    })
+    product = [...new Set(product)]
+  }
+
+  if (data && data.count) {
+    rel_list = data.count.map(({ rel_list }) => {
+      const answer = rel_list.map((rel_list) => {
+        return rel_list
+      })
+      return answer
+    })
+
+    rel_list = JSON.parse(JSON.stringify(rel_list.flat(Infinity)))
+  }
+
+  if (data && data.count) {
+    substance = data.count[0].substance
+  }
+
+  if (product && substance) {
+    nodes = JSON.parse(JSON.stringify([substance, ...product]))
+  }
+
   if (error) return <p>Error</p>
   return (
     <React.Fragment>
       <Title>Consist Aluminium</Title>
-      <Typography component="p" variant="h4">
+      <Typography component="div" variant="h4">
         {data && !error && !loading && (
           <div width="100%">
             <Table>
@@ -70,10 +104,9 @@ export default function Deposits() {
               </TableHead>
               <TableBody>
                 {data.count.map(({ product, rel_list, substance }, index) => {
-                  console.log(product, rel_list)
                   return (
                     <TableRow key={`row-${index}`}>
-                      <TableCell>{`${substance.substancename} with CAS:"${substance.CAS}"`}</TableCell>
+                      <TableCell>{`${substance.name} with CAS:"${substance.CAS}"`}</TableCell>
                       <TableCell>
                         {rel_list.map(
                           ({
@@ -100,6 +133,19 @@ export default function Deposits() {
                 })}
               </TableBody>
             </Table>
+            {product && rel_list && substance && !error && !loading && (
+              <ForceGraph3D
+                // JSON.parse(JSON.stringify(data.costData))
+                graphData={{
+                  nodes: nodes,
+                  links: rel_list,
+                }}
+                nodeId="id"
+                linkCurvature={0.2}
+                linkDirectionalArrowRelPos={1}
+                linkDirectionalArrowLength={10}
+              />
+            )}
           </div>
         )}
       </Typography>

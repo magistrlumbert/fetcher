@@ -54,13 +54,15 @@ type RatingCount @exclude {
 
 type product {
   gtin: ID!
+  id: String
   name: String
 }
 
 type substance {
   CAS: ID!
-  substancename: String!
-  density: Int
+  name: String!
+  id: String
+  density: String
 }
 
 type mnfplant {
@@ -72,13 +74,12 @@ type mnfplant {
 
 type connection{
   identity: String
-  start: String
-  end: String
+  source: String
+  target: String
   type: String
   processing_type: String
   amount: String
   unit: String
-  from: String
   to_gtin: String
   to_name: String
 }
