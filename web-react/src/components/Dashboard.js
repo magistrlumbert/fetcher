@@ -4,7 +4,7 @@ import { Grid, Paper } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import clsx from 'clsx'
 
-import UserCount from './UserCount'
+import SubstanceSearch from './substanceSearch'
 export default function Dashboard() {
   const theme = useTheme()
 
@@ -31,7 +31,7 @@ export default function Dashboard() {
         {/* User Count */}
         <Grid item xs={12} md={12} lg={12}>
           <Paper className={fixedHeightPaper}>
-            <UserCount />
+            <SubstanceSearch />
           </Paper>
         </Grid>
       </Grid>

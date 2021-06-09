@@ -1,78 +1,25 @@
-scalar Point
-scalar DateTime
-scalar PointInput
-
-type User {
-  userId: ID!
-  name: String
-  reviews: [Review] @relationship(type: "WROTE", direction: OUT)
-  avgStars: Float
-    @cypher(
-      statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN toFloat(avg(r.stars))"
-    )
-  numReviews: Int
-    @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN COUNT(r)")
-  recommendations(first: Int = 3): [Business]
-    @cypher(
-      statement: "MATCH (this)-[:WROTE]->(r:Review)-[:REVIEWS]->(:Business)<-[:REVIEWS]-(:Review)<-[:WROTE]-(:User)-[:WROTE]->(:Review)-[:REVIEWS]->(rec:Business) WHERE NOT EXISTS( (this)-[:WROTE]->(:Review)-[:REVIEWS]->(rec) ) WITH rec, COUNT(*) AS num ORDER BY num DESC LIMIT $first RETURN rec"
-    )
-}
-
-type Business {
-  businessId: ID!
-  name: String!
-  address: String
-  city: String
-  state: String
-  location: Point
-  avgStars: Float
-    @cypher(
-      statement: "MATCH (this)<-[:REVIEWS]-(r:Review) RETURN coalesce(avg(r.stars),0.0)"
-    )
-  reviews: [Review] @relationship(type: "REVIEWS", direction: IN)
-  categories: [Category] @relationship(type: "IN_CATEGORY", direction: OUT)
-}
-
-type Review {
-  reviewId: ID!
-  stars: Float
-  text: String
-  date: DateTime
-  business: Business @relationship(type: "REVIEWS", direction: OUT)
-  user: User @relationship(type: "WROTE", direction: IN)
-}
-
-type Category {
-  name: ID!
-  businesses: [Business] @relationship(type: "IN_CATEGORY", direction: IN)
-}
-
-type RatingCount @exclude {
-  stars: Float!
-  count: Int!
-}
-
-type product {
+type Product {
   gtin: ID!
-  id: String
+  identity: String
   name: String
+  id: String
 }
 
-type substance {
+type Substance {
   CAS: ID!
   name: String!
   id: String
   density: String
 }
 
-type mnfplant {
-  reviewId: ID!
+type Mnfplant {
+  identity: ID!
   name: String
-  Country: String
-  Adress: String
+  country: String
+  address: String
 }
 
-type connection{
+type Connection{
   identity: String
   source: String
   target: String
@@ -84,25 +31,23 @@ type connection{
   to_name: String
 }
 
-type response {
+type Response {
   id:ID!
-  substance: substance
-  rel_list: [connection]
-  product: product
+  substance: Substance
+  rel_list: [Connection]
+  product: Product
 }
 
-type Mutation {
-  mergeBusinessCategory(categories: [String!]!, businessId: ID!): Business
-    @cypher(
-      statement: "MATCH (b:Business {businessId: $businessId}) UNWIND $categories AS cat MERGE (c:Category {name: cat}) MERGE (b)-[:IN_CATEGORY]->(c) RETURN b"
-    )
+type Response2 {
+    id:ID!
+    mnfplant: Mnfplant
+    interlayer: Mnfplant
+    productRelations: [Connection]
+    productMatch: Product
+    product: Product
 }
 
 type Query {
-  userCount: Int! @cypher(statement: "MATCH (u:User) RETURN COUNT(u)")
-  ratingsCount: [RatingCount]
-    @cypher(
-      statement: "MATCH (r:Review) WITH r.stars AS stars, COUNT(*) AS count ORDER BY stars RETURN {stars: stars, count: count}"
-    )
-  count(offset: Int=0, first: Int=10):[response]
+  substances(filter: String="*"):[Response]
+  prodpaths(filter: String="*"):[Response2]
 }

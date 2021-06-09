@@ -17,7 +17,7 @@ import Title from './Title'
 
 const styles = (theme) => ({
   root: {
-    maxWidth: 700,
+    maxWidth: 1000,
     marginTop: theme.spacing(3),
     overflowX: 'auto',
     margin: 'auto',
@@ -32,44 +32,42 @@ const styles = (theme) => ({
   },
 })
 
-const GET_USER = gql`
-  query usersPaginateQuery(
-    $first: Int
-    $offset: Int
-    $orderBy: [UserSort]
-    $filter: UserWhere
-  ) {
-    users(
-      options: { limit: $first, skip: $offset, sort: $orderBy }
-      where: $filter
-    ) {
-      id: userId
-      name
-      avgStars
-      numReviews
+const GET_PRODUCT_PATH = gql`
+  query productPath($filter: String) {
+    prodpaths(filter: $filter) {
+      id
+      mnfplant {
+        identity
+        name
+      }
+      interlayer {
+        identity
+        name
+      }
+      product {
+        identity
+        name
+      }
     }
   }
 `
 
-function UserList(props) {
+function GtinSearch(props) {
   const { classes } = props
   const [order, setOrder] = React.useState('ASC')
   const [orderBy, setOrderBy] = React.useState('name')
-  const [page] = React.useState(0)
-  const [rowsPerPage] = React.useState(10)
-  const [filterState, setFilterState] = React.useState({ usernameFilter: '' })
+  const [filterState, setFilterState] = React.useState({
+    productnameFilter: '',
+  })
 
   const getFilter = () => {
-    return filterState.usernameFilter.length > 0
-      ? { name_CONTAINS: filterState.usernameFilter }
-      : {}
+    return filterState.productnameFilter.length > 0
+      ? '*' + filterState.productnameFilter + '*'
+      : '*'
   }
 
-  const { loading, data, error } = useQuery(GET_USER, {
+  const { loading, data, error } = useQuery(GET_PRODUCT_PATH, {
     variables: {
-      first: rowsPerPage,
-      offset: rowsPerPage * page,
-      orderBy: { [orderBy]: order },
       filter: getFilter(),
     },
   })
@@ -97,13 +95,13 @@ function UserList(props) {
 
   return (
     <Paper className={classes.root}>
-      <Title>User List</Title>
+      <Title>Products Path</Title>
       <TextField
         id="search"
-        label="User Name Contains"
+        label="Product Name or Gtin Contains"
         className={classes.textField}
-        value={filterState.usernameFilter}
-        onChange={handleFilterChange('usernameFilter')}
+        value={filterState.productnameFilter}
+        onChange={handleFilterChange('productnameFilter')}
         margin="normal"
         variant="outlined"
         type="text"
@@ -127,25 +125,30 @@ function UserList(props) {
                     direction={order.toLowerCase()}
                     onClick={() => handleSortRequest('name')}
                   >
-                    Name
+                    Plant Name
                   </TableSortLabel>
                 </Tooltip>
               </TableCell>
-              <TableCell key="avgStars">Average Stars</TableCell>
-              <TableCell key="numReviews">Number of Reviews</TableCell>
+              <TableCell key="avgStars">Path</TableCell>
+              <TableCell key="numReviews">Product Name</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.users.map((n) => {
+            {data.prodpaths.map(({ mnfplant, product, interlayer }, index) => {
+              console.log(interlayer)
               return (
-                <TableRow key={n.id}>
+                <TableRow key={index}>
                   <TableCell component="th" scope="row">
-                    {n.name}
+                    {interlayer !== null ? interlayer.name : mnfplant.name}
                   </TableCell>
                   <TableCell>
-                    {n.avgStars ? n.avgStars.toFixed(2) : '-'}
+                    {interlayer !== null
+                      ? interlayer.name + ' next steps under development'
+                      : 'manufactures'}
                   </TableCell>
-                  <TableCell>{n.numReviews}</TableCell>
+                  <TableCell>
+                    {product !== null ? product.name : 'null'}
+                  </TableCell>
                 </TableRow>
               )
             })}
@@ -156,4 +159,4 @@ function UserList(props) {
   )
 }
 
-export default withStyles(styles)(UserList)
+export default withStyles(styles)(GtinSearch)

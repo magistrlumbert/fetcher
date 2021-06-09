@@ -2,7 +2,7 @@ import React from 'react'
 
 import { Switch, Route, BrowserRouter as Router } from 'react-router-dom'
 
-import UserList from './components/UserList'
+import GtinSearch from './components/GtinSearch'
 
 import clsx from 'clsx'
 import { makeStyles } from '@material-ui/core/styles'
@@ -36,7 +36,7 @@ function Copyright() {
     <Typography variant="body2" color="textSecondary" align="center">
       {'Copyright © '}
       <MUILink color="inherit" href="https://grandstack.io/">
-        Your GRANDstack App Name Here
+        Search
       </MUILink>{' '}
       {new Date().getFullYear()}
       {'.'}
@@ -199,16 +199,16 @@ export default function App() {
                 <ListItemIcon>
                   <DashboardIcon />
                 </ListItemIcon>
-                <ListItemText primary="Aluminium" />
+                <ListItemText primary="Substance's Data" />
               </ListItem>
             </Link>
 
-            <Link to="/users" className={classes.navLink}>
+            <Link to="/gtin" className={classes.navLink}>
               <ListItem button>
                 <ListItemIcon>
                   <PeopleIcon />
                 </ListItemIcon>
-                <ListItemText primary="Coming Soon" />
+                <ListItemText primary="Search by gtin" />
               </ListItem>
             </Link>
           </List>
@@ -219,8 +219,8 @@ export default function App() {
           <Container maxWidth="lg" className={classes.container}>
             <Switch>
               <Route exact path="/" component={Dashboard} />
-              <Route exact path="/businesses" component={UserList} />
-              <Route exact path="/users" component={UserList} />
+              <Route exact path="/businesses" component={GtinSearch} />
+              <Route exact path="/gtin" component={GtinSearch} />
             </Switch>
 
             <Box pt={4}>

@@ -1,9 +1,11 @@
 const resolvers = {
   Query: {
-    count: async (_, __, ctx) => {
+    substances: async (_, { filter }, ctx) => {
       let session = ctx.driver.session()
-      const cypherQuery = `MATCH path=(substance:substance{substancename:'aluminium'})-[*]->(product:product)
-            RETURN substance,relationships(path) as rel_list,product
+      const cypherQuery = `CALL db.index.fulltext.queryNodes('searchSubstance', '${filter}') YIELD node 
+            WITH node
+            MATCH path=(node)-[*]->(product:Product)
+            RETURN node as substance,relationships(path) as rel_list,product
             ORDER BY size(rel_list)
             SKIP 0
             LIMIT 50`
@@ -11,6 +13,7 @@ const resolvers = {
         let productArr = {}
         const resData = result.records.map((record) => {
           const substance = record.get('substance').properties
+
           const product_id = record.get('product').identity.toString()
           const product = record.get('product').properties
           const rel_list = record.get('rel_list')
@@ -29,7 +32,7 @@ const resolvers = {
                 source: start.toString(),
                 target: end.toString(),
                 type: type.toString(),
-                amount: amount.toString(),
+                amount: amount ? amount.toString() : 'undefined',
                 unit: unit ? unit.toString() : 'undefined',
                 processing_type: processing_type
                   ? processing_type.toString()
@@ -46,7 +49,7 @@ const resolvers = {
                 id: record.get('substance').identity.toString(),
                 name: substancename,
                 CAS: CAS,
-                density: density.toString(),
+                density: density ? density.toString() : 'undefined',
               },
               rel_list: connections,
               product: {
@@ -60,8 +63,100 @@ const resolvers = {
         return resData
       })
     },
+
+    prodpaths: async (_, { filter }, ctx) => {
+      let session = ctx.driver.session()
+      const cypherQuery = `CALL db.index.fulltext.queryNodes('searchProduct', '${filter}') YIELD node 
+        WITH node
+        MATCH path=(mnf:Mnfplant)-[:MANUFACTURES]->(node)<-[:IS_A_PART_OF*0..]-(p2:Product)
+        OPTIONAL MATCH (p2)<-[rs:IS_A_SUBSTANCE_IN]-(sub:Substance)
+        OPTIONAL MATCH transport=(sub)<-[:MANUFACTURES]-(subMnf:Mnfplant)-[:TRANSPORTS*1..]->(transpoint:Mnfplant)-[:MANUFACTURES]->(node)
+        RETURN DISTINCT node as product,
+        relationships(path) AS productRelations, 
+        p2 AS productMatch, 
+        rs AS isSubstanceIn, 
+        sub AS substance, 
+        mnf AS manufacturingPlant, 
+        relationships(transport) AS transport, 
+        subMnf AS substanceManufacturer`
+      return await session.run(cypherQuery).then((result) => {
+        // let productArr = {}
+        let i = 0
+        const resData = result.records.map((record) => {
+          // console.log(record)
+          // const productRelations = record.get('productRelations')
+          // const productRelationsProperies =
+          //   record.get('productRelations').properties
+          // const prodRels = {
+          //     "identity": 659,
+          //     "start": 607,
+          //     "end": 602,
+          //     "type": "MANUFACTURES",
+          //     "properties": productRelationsProperies
+          // }
+          // const productMatch = record.get('productMatch')
+          // const productMatchProperies = record.get('productMatch').properties
+          // const isSubstanceIn = record.get('isSubstanceIn')
+          // const isSubstanceInProperies = record.get('isSubstanceIn').properties
+          // const substance = record.get('substance')
+          // const substanceProperies = record.get('substance').properties
+          const manufacturingPlant = record.get('manufacturingPlant')
+          let mnfPlant = null
+          if (manufacturingPlant) {
+            const manufacturingPlantProperies =
+              record.get('manufacturingPlant').properties
+            mnfPlant = {
+              identity: manufacturingPlant.identity.toString(),
+              name: manufacturingPlantProperies.name,
+              country: manufacturingPlantProperies.country,
+              address: manufacturingPlantProperies.adress,
+            }
+          }
+
+          // const transport = record.get('transport')
+          // const transportProperies = record.get('transport').properties
+
+          const substanceManufacturer = record.get('substanceManufacturer')
+          let interlayer = null
+          if (substanceManufacturer) {
+            const substanceManufacturerProperties = record.get(
+              'substanceManufacturer'
+            ).properties
+
+            interlayer = {
+              identity: substanceManufacturer.identity.toString(),
+              name: substanceManufacturerProperties.name,
+              country: substanceManufacturerProperties.country,
+              address: substanceManufacturerProperties.adress,
+            }
+          }
+
+          const productData = record.get('product')
+
+          let product = null
+          if (productData) {
+            const productDataProperties = record.get('product').properties
+            product = {
+              gtin: productDataProperties.gtin,
+              identity: productData.identity.toString(),
+              name: productDataProperties.name,
+            }
+          }
+
+          const dataToReturn = {
+            id: i,
+            mnfplant: mnfPlant,
+            rel_list: ['undefined'],
+            product: product,
+            interlayer: interlayer,
+          }
+          i++
+          return dataToReturn
+        })
+        return resData
+      })
+    },
   },
-  Mutation: {},
 }
 
 export default resolvers
