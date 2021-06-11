@@ -26,10 +26,8 @@ const GET_DATA_QUERY = gql`
   query substancesPaginateQuery($filter: String) {
     substances(filter: $filter) {
       substance {
-        id
         name
         CAS
-        density
       }
       product {
         id
