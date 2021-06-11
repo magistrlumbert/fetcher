@@ -7,9 +7,8 @@ type Product {
 
 type Substance {
   CAS: ID!
-  name: String!
-  id: String
-  density: String
+  name: String
+  identity: String
 }
 
 type Mnfplant {
@@ -29,6 +28,8 @@ type Connection{
   unit: String
   to_gtin: String
   to_name: String
+  start: String
+  end: String
 }
 
 type Response {
@@ -42,9 +43,12 @@ type Response2 {
     id:ID!
     mnfplant: Mnfplant
     interlayer: Mnfplant
-    productRelations: [Connection]
+    parts: [Connection]
     productMatch: Product
     product: Product
+    substance: Substance
+    isSubstanceIn: Connection
+    productMatch: Product,
 }
 
 type Query {

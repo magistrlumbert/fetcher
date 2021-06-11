@@ -48,6 +48,27 @@ const GET_PRODUCT_PATH = gql`
         identity
         name
       }
+      substance {
+        identity
+        name
+      }
+      isSubstanceIn {
+        identity
+        type
+        start
+        end
+      }
+      productMatch {
+        identity
+        name
+        gtin
+      }
+      parts {
+        identity
+        to_name
+        to_gtin
+        type
+      }
     }
   }
 `
@@ -134,24 +155,55 @@ function GtinSearch(props) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.prodpaths.map(({ mnfplant, product, interlayer }, index) => {
-              console.log(interlayer)
-              return (
-                <TableRow key={index}>
-                  <TableCell component="th" scope="row">
-                    {interlayer !== null ? interlayer.name : mnfplant.name}
-                  </TableCell>
-                  <TableCell>
-                    {interlayer !== null
-                      ? interlayer.name + ' next steps under development'
-                      : 'manufactures'}
-                  </TableCell>
-                  <TableCell>
-                    {product !== null ? product.name : 'null'}
-                  </TableCell>
-                </TableRow>
-              )
-            })}
+            {data.prodpaths.map(
+              (
+                {
+                  mnfplant,
+                  product,
+                  interlayer,
+                  substance,
+                  isSubstanceIn,
+                  productMatch,
+                  parts,
+                },
+                index
+              ) => {
+                console.log(interlayer)
+                return (
+                  <TableRow key={index}>
+                    <TableCell component="th" scope="row">
+                      {interlayer !== null ? interlayer.name : mnfplant.name}
+                    </TableCell>
+                    <TableCell>
+                      {interlayer !== null
+                        ? `${interlayer.name} manufactures ${substance.name} which ${isSubstanceIn.type} of the ${productMatch.name} `
+                        : 'manufactures'}
+                      {parts.map(
+                        ({
+                          // identity,
+                          // start,
+                          // end,
+                          // from,
+                          // to_gtin,
+                          to_name,
+                          // processing_type,
+                          amount,
+                          unit,
+                          type,
+                        }) => {
+                          return `${amount ? amount : ``} ${
+                            unit !== 'undefined' ? `` : 'piece(s)'
+                          } which ${type} the ${to_name} `
+                        }
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {product !== null ? product.name : 'null'}
+                    </TableCell>
+                  </TableRow>
+                )
+              }
+            )}
           </TableBody>
         </Table>
       )}

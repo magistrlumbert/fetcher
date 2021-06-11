@@ -70,17 +70,16 @@ const resolvers = {
         WITH node
         MATCH path=(mnf:Mnfplant)-[:MANUFACTURES]->(node)<-[:IS_A_PART_OF*0..]-(p2:Product)
         OPTIONAL MATCH (p2)<-[rs:IS_A_SUBSTANCE_IN]-(sub:Substance)
-        OPTIONAL MATCH transport=(sub)<-[:MANUFACTURES]-(subMnf:Mnfplant)-[:TRANSPORTS*1..]->(transpoint:Mnfplant)-[:MANUFACTURES]->(node)
+        OPTIONAL MATCH (sub)<-[:MANUFACTURES]-(subMnf:Mnfplant)
         RETURN DISTINCT node as product,
         relationships(path) AS productRelations, 
         p2 AS productMatch, 
         rs AS isSubstanceIn, 
         sub AS substance, 
         mnf AS manufacturingPlant, 
-        relationships(transport) AS transport, 
         subMnf AS substanceManufacturer`
       return await session.run(cypherQuery).then((result) => {
-        // let productArr = {}
+        let productArr = {}
         let i = 0
         const resData = result.records.map((record) => {
           // console.log(record)
@@ -94,12 +93,75 @@ const resolvers = {
           //     "type": "MANUFACTURES",
           //     "properties": productRelationsProperies
           // }
-          // const productMatch = record.get('productMatch')
-          // const productMatchProperies = record.get('productMatch').properties
-          // const isSubstanceIn = record.get('isSubstanceIn')
-          // const isSubstanceInProperies = record.get('isSubstanceIn').properties
-          // const substance = record.get('substance')
-          // const substanceProperies = record.get('substance').properties
+
+          const productMatchData = record.get('productMatch')
+          let productMatch = null
+          if (productMatchData) {
+            const { identity } = productMatchData
+            const { name, gtin } = record.get('productMatch').properties
+            productMatch = {
+              identity: identity ? identity.toString() : null,
+              name: name,
+              gtin: gtin,
+            }
+            productArr = { ...productArr, [identity.toString()]: productMatch }
+          }
+
+          let connections = []
+          const rel_list = record.get('productRelations')
+          rel_list.map((relationship) => {
+            const { identity, start, end, type } = relationship
+            if (type !== 'MANUFACTURES') {
+              const { amount, unit, processing_type } = relationship.properties
+              const connection = {
+                identity: identity.toString(),
+                source: start.toString(),
+                target: end.toString(),
+                type: type.toString(),
+                amount: amount ? amount.toString() : 'undefined',
+                unit: unit ? unit.toString() : 'undefined',
+                processing_type: processing_type
+                  ? processing_type.toString()
+                  : 'undefined',
+                to_gtin: productArr[end.toString()].gtin,
+                to_name: productArr[end.toString()].name,
+              }
+              connections = [...connections, connection]
+            }
+          })
+
+          const isSubstanceInData = record.get('isSubstanceIn')
+          let isSubstanceIn = null
+
+          if (isSubstanceInData) {
+            const { identity, start, end, type } = isSubstanceInData
+            const { unit, amount, processing_type } =
+              isSubstanceInData.properties
+
+            isSubstanceIn = {
+              identity: identity ? identity.toString() : null,
+              start: start ? start.toString() : null,
+              end: end ? end.toString() : null,
+              type: type ? type.toString() : null,
+              unit: unit ? unit.toString() : null,
+              amount: amount ? amount.toString() : null,
+              processing_type: processing_type
+                ? processing_type.toString()
+                : null,
+            }
+          }
+
+          const substanceData = record.get('substance')
+          let substance = null
+          if (substanceData) {
+            const substanceDataProperties = record.get('substance').properties
+            substance = {
+              CAS: substanceDataProperties.CAS,
+              name: substanceDataProperties.substancename,
+              identity: substanceData.identity.toString(),
+            }
+          }
+
           const manufacturingPlant = record.get('manufacturingPlant')
           let mnfPlant = null
           if (manufacturingPlant) {
@@ -112,9 +174,6 @@ const resolvers = {
               address: manufacturingPlantProperies.adress,
             }
           }
-
-          // const transport = record.get('transport')
-          // const transportProperies = record.get('transport').properties
 
           const substanceManufacturer = record.get('substanceManufacturer')
           let interlayer = null
@@ -149,6 +208,10 @@ const resolvers = {
             rel_list: ['undefined'],
             product: product,
             interlayer: interlayer,
+            substance: substance,
+            isSubstanceIn: isSubstanceIn,
+            productMatch: productMatch,
+            parts: connections,
           }
           i++
           return dataToReturn
