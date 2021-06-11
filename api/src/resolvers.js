@@ -82,17 +82,6 @@ const resolvers = {
         let productArr = {}
         let i = 0
         const resData = result.records.map((record) => {
-          // console.log(record)
-          // const productRelations = record.get('productRelations')
-          // const productRelationsProperies =
-          //   record.get('productRelations').properties
-          // const prodRels = {
-          //     "identity": 659,
-          //     "start": 607,
-          //     "end": 602,
-          //     "type": "MANUFACTURES",
-          //     "properties": productRelationsProperies
-          // }
 
           const productMatchData = record.get('productMatch')
           let productMatch = null
